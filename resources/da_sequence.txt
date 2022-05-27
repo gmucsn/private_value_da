@@ -1,0 +1,19 @@
+Title: Private Value Double Auction
+Environment -> Institution: [init]
+Institution -> Environment: [confirm]
+Environment -> agent: [init]
+agent -> Environment: [confirm]
+Environment -> Environment: [reminder, t, end period]
+Environment -> Institution: [start period]
+Institution -> agent: [start round]
+agent -> Institution: [request_standing]
+agent -> Environment: [request_contracts]
+Institution -> agent: [standing]
+Environment -> agent: [contracts]
+Institution -> Environment: [contract]
+Note right of Environment:(buyer, seller, price)
+Environment -> Institution: [end period]
+Institution -> agent: [end round]
+Note right of agent: buyer and seller\nare agents 
+buyer -> Institution: [bid x, buy]
+seller -> Institution: [ask x, sell]
