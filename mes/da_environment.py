@@ -46,21 +46,10 @@ class DAEnvironment(Environment):
         self.agents_ready = None
         self.contracts = []
 
- 
-    def send_message(self, directive, receiver, payload):
-        """Sends message"""
-        new_message = Message()  
-        new_message.set_sender(self.myAddress)  
-        new_message.set_directive(directive)
-        new_message.set_payload(payload)
-        self.log_message(f"Message {directive} from Environment sent to {receiver}")
-        receiver_address = self.address_book.select_addresses({"short_name": receiver})
-        self.send(receiver_address, new_message)
-
 
     def set_reminder(self, directive, seconds_to_reminder):
         """Sets a reminder to send a message"""
-        reminder_msg = Message()
+        reminder_msg = Message()    
         reminder_msg.set_sender(self.myAddress)
         reminder_msg.set_directive(directive)
         self.reminder(seconds_to_reminder = seconds_to_reminder,
