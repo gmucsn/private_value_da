@@ -1,0 +1,70 @@
+{
+    "mtree_type": "mes_simulation_description",
+    "name": "Basic double_auction Run",
+    "id": "1",
+    "description": null,
+    "environment": "da_environment.DAEnvironment",
+    "institutions": [
+        {
+            "institution_name": "da_institution.DAInstitution"
+        }
+    ],
+    "number_of_runs": 1,
+    "agents": [
+        {
+            "agent_name": "da_agent.BasicAgent",
+            "number": 6
+        }
+    ],
+    "properties": {
+        "endowment": 0,
+        "starting_bid": 0,
+        "starting_ask": 1000,
+        "values": [
+            [
+                900,
+                600,
+                300
+            ],
+            [
+                800,
+                500,
+                200
+            ],
+            [
+                700,
+                400,
+                100
+            ]
+        ],
+        "costs": [
+            [
+                50,
+                100,
+                150,
+                200
+            ],
+            [
+                50,
+                100,
+                150,
+                200
+            ],
+            [
+                50,
+                100,
+                150,
+                200
+            ]
+        ],
+        "period_length": 60,
+        "number_of_periods": 1,
+        "processing_fee": 0
+    },
+    "data_logging": false,
+    "debug": null,
+    "log_level": null,
+    "source_hash": "d32c8ef0d96427e9c5572e35898f3855",
+    "simulation_run_id": "basic_config-2023_05_16-20_39_43",
+    "mes_directory": "/auctions/private_value_double_auction"
+}

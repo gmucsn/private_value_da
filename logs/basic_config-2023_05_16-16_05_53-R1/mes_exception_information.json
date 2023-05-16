@@ -1,0 +1,10 @@
+{
+    "error_message": "MES ENVIRONMENT CRASHING - EXCEPTION FOLLOWS \n\tSource Message: <Message Sender: , Recipients: , Directive: agent_confirm_init, Content: None>\n\tError Type: <class 'Exception'>\n\tError: Trying to send to an empty list of addresses.\n\n\tTrace Output: \n\t  File \"/mtree/mTree/microeconomic_system/environment.py\", line 218, in receiveMessage\n    directive_handler(self, message)\n\n\t  File \"da_environment.py\", line 132, in agent_confirm_init\n\n\t  File \"/mtree/mTree/microeconomic_system/environment.py\", line 665, in send_message\n    self.send(receiver_address, new_message)\n\n\t  File \"/mtree/mTree/microeconomic_system/environment.py\", line 692, in send\n    raise Exception(\"Trying to send to an empty list of addresses.\")\n\n",
+    "source_message": "<Message Sender: , Recipients: , Directive: agent_confirm_init, Content: None>",
+    "error_type": "<class 'Exception'>",
+    "error": "Trying to send to an empty list of addresses.",
+    "filename": "/mtree/mTree/microeconomic_system/environment.py",
+    "lineno": 218,
+    "name": "receiveMessage",
+    "line": "directive_handler(self, message)"
+}

@@ -36,15 +36,39 @@ class DAEnvironment(Environment):
     - contracts, payload = contract_list
     """
 
-    def __init__(self):
-        self.endowment = None
-        self.values = []
-        self.costs = []
-        self.starting_bid = None
-        self.starting_ask = None
-        self.processing_fee = None
+    def prepare(self):
+        self.log_message("<E> prepare")    
+        self.endowment = self.get_property("endowment")
+        self.values = self.get_property("values") # list of lists 
+        self.costs = self.get_property("costs")
+        self.starting_bid = self.get_property("starting_bid")
+        self.starting_ask = self.get_property("starting_ask")
+        self.processing_fee = self.get_property("processing_fee")
+        self.period_length = self.get_property("period_length")
+        self.number_of_periods = self.get_property("number_of_periods")
         self.agents_ready = None
         self.contracts = []
+
+        self.num_buyers = len(self.values)
+        self.num_sellers = len(self.costs)
+        self.num_agents = self.num_buyers + self.num_sellers
+        self.agent_data = {}
+        for k in range(self.num_agents):
+            name = f"da_agent.BasicAgent {k+1}"
+            if k < self.num_buyers:
+                self.agent_data[name] = {"id": k,
+                     "role": "Buyer",
+                     "endowment": self.endowment,
+                     "values_or_costs": self.values[k],
+                     "name": name}
+            else: 
+                self.agent_data[name] = {"id": k-self.num_buyers,
+                     "role": "Seller",
+                     "endowment": self.endowment,
+                     "values_or_costs": self.costs[k-self.num_buyers],
+                     "name": name}
+
+        self.log_message(f"<E> prepare {self.agent_data}")
 
 
     def set_reminder(self, directive, seconds_to_reminder):
@@ -54,24 +78,7 @@ class DAEnvironment(Environment):
         reminder_msg.set_directive(directive)
         self.reminder(seconds_to_reminder = seconds_to_reminder,
                       message = reminder_msg)
-
-
-    def init_environment(self):
         
-        #Agent related
-        self.endowment = self.get_property("endowment")
-        self.values = self.get_property("values") # list of lists buyer vaues, one list per buyer
-        self.costs = self.get_property("costs") # list of lists seller costs, one list per seller
-
-        #Institution related
-        self.starting_bid = self.get_property("starting_bid")
-        self.starting_ask = self.get_property("starting_ask")
-        self.processing_fee = self.get_property("processing_fee")
-        self.period_length = self.get_property("period_length")
-        self.number_of_periods = self.get_property("number_of_periods")
-
-        self.contracts = []
-
 
     @directive_decorator("start_environment")
     def start_environment(self, message: Message):
@@ -82,10 +89,9 @@ class DAEnvironment(Environment):
         Calls: init_environment
              : set_reminder
         """
-        self.init_environment()
         self.set_reminder('env_end_period', 60)
         payload = {'starting_bid': self.starting_bid, 'starting_ask': self.starting_ask}
-        self.send_message("init_institution", "da_institution.DAInstitution 1", payload)
+        self.send_message("init_institution", "da_institution.DAInstitution", payload)
 
 
     @directive_decorator("institution_confirm_init")
@@ -94,27 +100,13 @@ class DAEnvironment(Environment):
         Behavior: Initializes agents with values and costs
         Receives: institution_confirm_init message from institution 
         Sends: init_agent message to agents 
-        Sets: number_of_agents
-              agents_ready = 0
+        Sets: agents_ready = 0
         """
-        num_buyers = len(self.values)
-        num_sellers = len(self.costs)
-        self.number_of_agents = num_buyers + num_sellers
+        
         self.agents_ready = 0
-        self.log_message(f'<E> {self.address_book.get_agents()}')
-        for k,agent_sn in enumerate(self.address_book.get_agents()):
-            if k < num_buyers:
-                agent_payload = {"id": k,
-                            "role": "Buyer",
-                            "values_or_costs": self.values[k]
-                            }
-            else:
-                 agent_payload = {"id": k-num_buyers,
-                            "role": "Seller",
-                            "values_or_costs": self.costs[k-num_buyers]
-                            }
-            self.send_message("init_agents", agent_sn, agent_payload)             
- 
+        for agent_name, agent in self.agent_data.items():
+            self.send_message('init_agent', agent_name, agent)
+           
 
     @directive_decorator("agent_confirm_init")
     def agent_confirm_init(self, message:Message):
@@ -125,10 +117,10 @@ class DAEnvironment(Environment):
         Sends: open_institution message to instituion with address book of agents 
         """
         self.agents_ready += 1
-        if self.agents_ready == self.number_of_agents:
+        if self.agents_ready == self.num_agents:
             self.agents_ready = 0
             payload = self.address_book.get_agents()
-            self.send_message("open_institution", 'da_institution.DAInstitution 1', payload) 
+            self.send_message("open_institution", 'da_institution.DAInstitution', payload) 
 
 
     @directive_decorator("contract")
@@ -149,7 +141,7 @@ class DAEnvironment(Environment):
         Sends: close_institution message to institution
         Calls:  reminder to close with close_mes message 
         """
-        self.send_message("close_institution", 'da_institution.DAInstitution 1', None) 
+        self.send_message("close_institution", 'da_institution.DAInstitution') 
         self.set_reminder('close_mes', 10)
 
 

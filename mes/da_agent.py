@@ -28,37 +28,6 @@ class BasicAgent(Agent):
 
     Messages Sent
     """ 
-    def __init__(self):
-        self.role = None  #role = Buyer or Seller
-        self.values_or_costs = []
-        self.institution_address = None
-        self.environment_address = None
-        self.agent_state = None
-        self.institution_state_dic = None
-        self.current_unit = None
-        self.offer_wait_time = 3
-        self.prices = []
-        self.current_standing = None
-        self.standing_ask = None
-        self.standing_bid = None
-        
-
-    def send_message(self, directive, receiver, payload, use_env):
-        """Sends message
-           use_env = True has method use environment address """
-        new_message = Message()
-        new_message.set_sender(self.myAddress)
-        new_message.set_directive(directive)
-        new_message.set_payload(payload)
-        if use_env:
-            receiver = "Environment"
-            receiver_address = self.environment_address
-        else:
-            receiver_address = self.institution_address
-        self.log_message(
-            f"...<A>.. Message {directive} .. {payload}") 
-        self.send(receiver_address, new_message)
-
 
     def set_reminder(self, directive, seconds_to_reminder):
         """Sets a reminder to send a message"""
@@ -69,8 +38,8 @@ class BasicAgent(Agent):
                       message = reminder_msg)
 
 
-    @directive_decorator("init_agents")
-    def init_agents(self, message: Message):
+    @directive_decorator("init_agent")
+    def init_agent(self, message: Message):
         """
         Behavior: Initializes agent
         Receives: init_agents message from environment with agent_state payload
@@ -83,7 +52,7 @@ class BasicAgent(Agent):
         self.environment_address = message.get_sender() #saves the environment address 
         self.agent_state = message.get_payload()
         self.agent_state["current_unit"] = 0
-        self.send_message('agent_confirm_init', 'environment', None, True)
+        self.send_message('agent_confirm_init', 'da_environment.DAEnvironment')
         
         self.double_auction_closed = True
         self.log_message(f'<A> {self.short_name} = {self.agent_state}')
@@ -103,7 +72,7 @@ class BasicAgent(Agent):
         self.institution_address = message.get_sender()
         self.double_auction_closed = False
         self.set_reminder('make_order', 5)
-        self.send_message('request_standing', 'institution', self.short_name, False)
+        self.send_message('request_standing','da_institution.DAInstitution', self.short_name)
         
  
     @directive_decorator("make_order")
@@ -114,7 +83,7 @@ class BasicAgent(Agent):
         Sends: request_standing to institution
         """
         if self.double_auction_closed: return
-        self.send_message('request_standing', 'institution', self.short_name, False)
+        self.send_message('request_standing', 'da_institution.DAInstitution', self.short_name)
         
 
     @directive_decorator("standing")
@@ -158,7 +127,7 @@ class BasicAgent(Agent):
                 order['order_type'] = "BID"
                 order['order_value'] = bid
                 #self.log_data(f'<A> {self.short_name} BID {bid} : {value}, {self.standing_bid}')
-                self.send_message('order', 'institution', order, False)
+                self.send_message('order', 'da_institution.DAInstitution', order)
 
 
     def make_ask(self): 
@@ -181,7 +150,7 @@ class BasicAgent(Agent):
                 order['order_type'] = "ASK"
                 order['order_value'] = ask
                 #self.log_data(f'<A> {self.short_name} ASK {ask} : {cost}, {self.standing_ask}')
-                self.send_message('order', 'institution', order, False )
+                self.send_message('order', 'da_institution.DAInstitution', order)
 
  
     @directive_decorator("order_processed")
