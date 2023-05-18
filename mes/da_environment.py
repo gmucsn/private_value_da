@@ -98,11 +98,10 @@ class DAEnvironment(Environment):
     def institution_confirm_init(self, message:Message):
         """
         Behavior: Initializes agents with values and costs
-        Receives: institution_confirm_init message from institution 
-        Sends: init_agent message to agents 
+        Receives: 'institution_confirm_init' message from institution 
+        Sends: 'init_agent' message to agents 
         Sets: agents_ready = 0
-        """
-        
+        """       
         self.agents_ready = 0
         for agent_name, agent in self.agent_data.items():
             self.send_message('init_agent', agent_name, agent)
@@ -111,15 +110,18 @@ class DAEnvironment(Environment):
     @directive_decorator("agent_confirm_init")
     def agent_confirm_init(self, message:Message):
         """
-        Behavior: Opens institution after all agents confirm init
-        Receives: agent_confirm_init message from agents
+        Behavior: Opens institution after agents confirm init
+        Receives: 'agent_confirm_init' message from agents
         Waits: for all agents to confirm  
-        Sends: open_institution message to instituion with address book of agents 
+        Sends: 'open_institution' message to institution with address book of agents 
         """
         self.agents_ready += 1
+        self.log_message(f"{message}", target=self.short_name)
+        self.log_message(f"{self.agents_ready, self.num_agents}", target=self.short_name)
         if self.agents_ready == self.num_agents:
             self.agents_ready = 0
-            payload = self.address_book.get_agents()
+            payload = list(self.agent_data.keys())
+            self.log_message(f"agents = {payload}", target=self.short_name)
             self.send_message("open_institution", 'da_institution.DAInstitution', payload) 
 
 

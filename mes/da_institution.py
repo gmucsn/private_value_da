@@ -14,29 +14,11 @@ import datetime
 class DAInstitution(Institution):
     """
     DA Institution runs the double_auction institution using an 
-    improvement rule on standing_bid and standing_ask to make contracts
-    for one unit each.  Order history is maintained in the order_book.
+    improvement rule on standing_bid and standing_ask to make one unit contracts.
+    Order history is maintained in the order_book.
     """  
     def __init__(self):
         pass
-
-
-    def send_message(self, directive, receiver, payload, use_env = False):
-        """Sends message to receiver
-           use_env = True has method use environment address """
-        new_message = Message()
-        new_message.set_sender(self.myAddress)
-        new_message.set_directive(directive)
-        new_message.set_payload(payload)
-        if use_env:
-            receiver = "Environment"
-            receiver_address = self.environment_address
-        else:
-            receiver_address = self.address_book.select_addresses(
-                               {"short_name": receiver})
-        self.log_message(
-            f"..<M>..Message {directive} from Institution sent to {receiver}") 
-        self.send(receiver_address, new_message)
 
 
     @directive_decorator("init_institution")
@@ -45,15 +27,13 @@ class DAInstitution(Institution):
         Behavior: Initializes institution with starting state
         Receives: init_institution message with payload equal to opening state. 
         Sends: institution_confirm_init message to environment.
-        Sets: payload in state dictionary
-            : environment address in self.environment_address 
-            : True in auction_closed
+        Sets: payload = ('starting_bid', 'starting_ask') in state dictionary
         """
-        self.environment_address = message.get_sender()
         self.auction_closed = True
         self.order_book = []
         self.state = message.get_payload()
-        self.send_message("institution_confirm_init", "Environment", None, True)
+        self.env_short_name = "da_environment.DAEnvironment"
+        self.send_message("institution_confirm_init", self.env_short_name)
  
 
     def process_order(self, order_type, agent, order_value, status):
@@ -84,14 +64,14 @@ class DAInstitution(Institution):
         Initializes: order_book a list of orders
                      contracts a list of contracts
         """
-        self.address_book.merge_addresses(message.get_payload())
-        self.log_message(f'<I> {self.address_book.get_addresses()}')
+        self.agent_names = message.get_payload()
+        self.log_message(f'<I> {self.agent_names}')
         self.order_book = []
         self.contracts = []
         self.init_standing()
         self.auction_closed = False
-        for agent in self.address_book.get_addresses():
-            self.send_message("double_auction_open", agent, None, False) 
+        for agent in self.agent_names:
+            self.send_message("double_auction_open", agent) 
  
 
     @directive_decorator("request_standing")
@@ -104,14 +84,15 @@ class DAInstitution(Institution):
         if self.auction_closed: return
         agent = message.get_payload() #saves the agent address 
         payload = (self.standing_bid, self.standing_ask) 
-        self.send_message('standing', agent, payload, False)
+        self.send_message('standing', agent, payload)
 
 
     def process_contract(self, buyer_id, seller_id, price):
         contract = (buyer_id, seller_id, price)
+        self.log_message(f"Contract = {contract}", target = self.short_name)  
         self.process_order("CONTRACT", self.short_name, contract, "contract")
         self.contracts.append(contract)
-        self.send_message('contract', 'environment', contract, True)       
+        self.send_message("contract", self.env_short_name, contract)       
  
 
     def process_bid(self, agent_order):
@@ -171,7 +152,7 @@ class DAInstitution(Institution):
         Sends: order_processed message to agent with payload = revised_order
         """
         if self.auction_closed: return
-        agent_order = message.get_payload() #saves the agent order
+        agent_order = message.get_payload() 
         self.log_message(f".... ORDER..{agent_order}")  
         if agent_order['order_type'] == "BID":
             self.process_bid(agent_order)
@@ -184,11 +165,11 @@ class DAInstitution(Institution):
         if revised_order['order_type'] == 'CONTRACT':
             buying_agent = revised_order['order_value'][0]
             selling_agent = revised_order['order_value'][1]
-            self.send_message('order_processed', buying_agent, revised_order, False)
-            self.send_message('order_processed', selling_agent, revised_order, False)
+            self.send_message('order_processed', buying_agent, revised_order)
+            self.send_message('order_processed', selling_agent, revised_order)
             self.init_standing()
         else:
-            self.send_message('order_processed', agent_order['agent'], revised_order, False)
+            self.send_message('order_processed', agent_order['agent'], revised_order)
 
  
     @directive_decorator("close_institution")
@@ -202,6 +183,5 @@ class DAInstitution(Institution):
         """
         self.log_message(f'>>>>> ORDER BOOK >> {self.order_book}')
         self.auction_closed = True
-        self.log_message(f"<I>... address_book, {self.address_book.get_addresses()}")
-        for agent in self.address_book.get_addresses():
-            self.send_message("double_auction_closed", agent, None, False) 
+        for agent in self.agent_names:
+            self.send_message("double_auction_closed", agent) 

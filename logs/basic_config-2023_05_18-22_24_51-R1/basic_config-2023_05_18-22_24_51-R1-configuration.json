@@ -64,7 +64,7 @@
     "data_logging": false,
     "debug": null,
     "log_level": null,
-    "source_hash": "2e8991f79ad812e517d34ee85e9f1e66",
-    "simulation_run_id": "basic_config-2023_05_16-20_50_58",
+    "source_hash": "e9f2e5d2ed7b2f7a9e45744b2dce8458",
+    "simulation_run_id": "basic_config-2023_05_18-22_24_51",
     "mes_directory": "/auctions/private_value_double_auction"
 }
