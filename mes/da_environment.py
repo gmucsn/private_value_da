@@ -13,12 +13,9 @@ import datetime
 @directive_enabled_class
 class DAEnvironment(Environment):
     """
-    The DA environment initializes the agents and the institutions using
-    specific control variables in the config.  The environment is 
-    responsible for sending the init messages to the agents and institution,
-    and openming and closing the exchange.                  
-    
- 
+    The DA environment initializes agents and the double auction institutions
+    using control variables in the config file and read in the prepare method.  
+
     Messages Received:
     - start_environment, sent by mTree_runner
     - env_end_period, sent by self
@@ -29,8 +26,9 @@ class DAEnvironment(Environment):
 
 
     Messages Sent
-    - init_institution, payload = data_dict
-    - init_agents, payload = agent_dict
+    - init_institution, payload = 
+         {'starting_bid': self.starting_bid, 'starting_ask': self.starting_ask}
+    - init_agents, payload = agent_data dictionary
     - start_exchange, payload = None
     - end_exchange, payload = None
     - contracts, payload = contract_list
@@ -89,7 +87,7 @@ class DAEnvironment(Environment):
         Calls: init_environment
              : set_reminder
         """
-        self.set_reminder('env_end_period', 60)
+        self.set_reminder('env_end_period', self.period_length)
         payload = {'starting_bid': self.starting_bid, 'starting_ask': self.starting_ask}
         self.send_message("init_institution", "da_institution.DAInstitution", payload)
 

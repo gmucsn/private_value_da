@@ -20,19 +20,21 @@ class DAInstitution(Institution):
     def __init__(self):
         pass
 
+    def prepare(self):
+        self.env_short_name = "da_environment.DAEnvironment"
+
+    def process_init_institution(self, message):
+        self.auction_closed = True
+        self.order_book = []
+        self.state = message.get_payload()
+
 
     @directive_decorator("init_institution")
     def init_institution(self, message: Message):
         """
-        Behavior: Initializes institution with starting state
-        Receives: init_institution message with payload equal to opening state. 
-        Sends: institution_confirm_init message to environment.
         Sets: payload = ('starting_bid', 'starting_ask') in state dictionary
         """
-        self.auction_closed = True
-        self.order_book = []
-        self.state = message.get_payload()
-        self.env_short_name = "da_environment.DAEnvironment"
+        self.process_init_institution(message)
         self.send_message("institution_confirm_init", self.env_short_name)
  
 
@@ -48,12 +50,20 @@ class DAInstitution(Institution):
 
 
     def init_standing(self):
-        """initializes stabding bid and ask to starting bid and ask"""
         self.standing_bid = self.state["starting_bid"]
         self.standing_ask = self.state["starting_ask"]
         self.process_order("BID", self.short_name, self.standing_bid, "update_standing_bid")
         self.process_order("ASK", self.short_name, self.standing_ask, "update_standing_ask")
- 
+
+
+    def process_open_institution(self, message):
+        self.agent_names = message.get_payload()
+        self.log_message(f'<I> {self.agent_names}')
+        self.order_book = []
+        self.contracts = []
+        self.init_standing()
+        self.auction_closed = False
+
 
     @directive_decorator("open_institution")
     def open_institution(self, message: Message):
@@ -64,12 +74,7 @@ class DAInstitution(Institution):
         Initializes: order_book a list of orders
                      contracts a list of contracts
         """
-        self.agent_names = message.get_payload()
-        self.log_message(f'<I> {self.agent_names}')
-        self.order_book = []
-        self.contracts = []
-        self.init_standing()
-        self.auction_closed = False
+        self.process_open_institution(message)
         for agent in self.agent_names:
             self.send_message("double_auction_open", agent) 
  

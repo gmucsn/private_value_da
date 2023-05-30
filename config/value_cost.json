@@ -1,5 +1,0 @@
-  "agents": [{"agent_name": "da_agent.BasicAgent", "number": 6}],
-  "properties": {"types": ["Buyer", "Seller", "Buyer", "Seller"]},
-                 "values": [[900, 700, 500, 300, 100], [800, 600, 400, 200]],
-                 "costs": [[100, 300, 500, 700, 900], [200, 400, 600, 800]],
-                }
