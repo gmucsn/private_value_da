@@ -28,6 +28,9 @@ class BasicAgent(Agent):
 
     Messages Sent
     """ 
+    def prepare(self):
+        self.env_short_name = "da_environment.DAEnvironment"
+
 
     def set_reminder(self, directive, seconds_to_reminder):
         """Sets a reminder to send a message"""
@@ -36,6 +39,16 @@ class BasicAgent(Agent):
         reminder_msg.set_directive(directive)
         self.reminder(seconds_to_reminder = seconds_to_reminder,
                       message = reminder_msg)
+
+
+    def process_init_agent(self, message): 
+        self.agent_state = message.get_payload()
+        self.agent_state["current_unit"] = 0
+        agent_role = self.agent_state["role"]
+        v_c = self.agent_state["values_or_costs"]
+        self.double_auction_closed = True
+        self.log_message(f'<A> {self.short_name} = {self.agent_state}')
+        self.log_data(f'<A>: {self.short_name}: {agent_role}: {v_c}')
 
 
     @directive_decorator("init_agent")
@@ -49,16 +62,9 @@ class BasicAgent(Agent):
         Logs: agent_state to message log
         Logs: agent_state to data log 
         """
-        self.environment_address = message.get_sender() #saves the environment address 
-        self.agent_state = message.get_payload()
-        self.agent_state["current_unit"] = 0
-        self.send_message('agent_confirm_init', 'da_environment.DAEnvironment')
-        
-        self.double_auction_closed = True
-        self.log_message(f'<A> {self.short_name} = {self.agent_state}')
-        agent_role = self.agent_state["role"]
-        v_c = self.agent_state["values_or_costs"]
-        self.log_data(f'<A>: {self.short_name}: {agent_role}: {v_c}')
+        self.process_init_agent(message)
+        self.send_message('agent_confirm_init', self.env_short_name)
+
 
     @directive_decorator("double_auction_open")
     def double_auction_open(self, message: Message):

@@ -1,0 +1,12 @@
+{
+    "simulation_id": "1",
+    "simulation_run_id": "basic_config-2023_05_30-22_23_36",
+    "run_number": 1,
+    "run_code": "3a01db",
+    "mes_directory": "/auctions/private_value_double_auction",
+    "mes_log_directory": "/auctions/private_value_double_auction/logs/basic_config-2023_05_30-22_23_36-R1",
+    "status": "Finished",
+    "start_time": "2023-05-30 22:23:36.556287",
+    "end_time": "2023-05-30 22:24:47.357441",
+    "total_time": "0:01:10.801154"
+}

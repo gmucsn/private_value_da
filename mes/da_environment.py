@@ -67,7 +67,7 @@ class DAEnvironment(Environment):
                      "name": name}
 
         self.log_message(f"<E> prepare {self.agent_data}")
-
+        self.institution = 'da_institution.DAInstitution'
 
     def set_reminder(self, directive, seconds_to_reminder):
         """Sets a reminder to send a message"""
@@ -89,7 +89,7 @@ class DAEnvironment(Environment):
         """
         self.set_reminder('env_end_period', self.period_length)
         payload = {'starting_bid': self.starting_bid, 'starting_ask': self.starting_ask}
-        self.send_message("init_institution", "da_institution.DAInstitution", payload)
+        self.send_message("init_institution", self.institution, payload)
 
 
     @directive_decorator("institution_confirm_init")
@@ -114,13 +114,11 @@ class DAEnvironment(Environment):
         Sends: 'open_institution' message to institution with address book of agents 
         """
         self.agents_ready += 1
-        self.log_message(f"{message}", target=self.short_name)
-        self.log_message(f"{self.agents_ready, self.num_agents}", target=self.short_name)
         if self.agents_ready == self.num_agents:
             self.agents_ready = 0
-            payload = list(self.agent_data.keys())
-            self.log_message(f"agents = {payload}", target=self.short_name)
-            self.send_message("open_institution", 'da_institution.DAInstitution', payload) 
+            agent_names = list(self.agent_data.keys())
+            self.log_message(f"agents = {agent_names}", target=self.short_name)
+            self.send_message("open_institution", self.institution, agent_names) 
 
 
     @directive_decorator("contract")
@@ -141,7 +139,7 @@ class DAEnvironment(Environment):
         Sends: close_institution message to institution
         Calls:  reminder to close with close_mes message 
         """
-        self.send_message("close_institution", 'da_institution.DAInstitution') 
+        self.send_message("close_institution", self.institution) 
         self.set_reminder('close_mes', 10)
 
 
